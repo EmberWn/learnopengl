@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D2387A2425CED00B0059F93A /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2387A2225CED00B0059F93A /* Shader.cpp */; };
 		D23F312A24BB45F200BFA637 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D23F312924BB45F200BFA637 /* glad.c */; };
 		D23F312C24BB497000BFA637 /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */; };
 		D23F312D24BB497000BFA637 /* libglfw.3.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -38,6 +39,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D2387A2225CED00B0059F93A /* Shader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Shader.cpp; sourceTree = "<group>"; };
+		D2387A2325CED00B0059F93A /* Shader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Shader.hpp; sourceTree = "<group>"; };
 		D23F312924BB45F200BFA637 /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
 		D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../3rdparty/libs/libglfw.3.3.dylib; sourceTree = "<group>"; };
 		D2BD759F24BB2C4E00159ACD /* learnopengl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = learnopengl; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +81,8 @@
 		D2BD75A124BB2C4E00159ACD /* learnopengl */ = {
 			isa = PBXGroup;
 			children = (
+				D2387A2225CED00B0059F93A /* Shader.cpp */,
+				D2387A2325CED00B0059F93A /* Shader.hpp */,
 				D23F312924BB45F200BFA637 /* glad.c */,
 				D2BD75A224BB2C4E00159ACD /* main.cpp */,
 			);
@@ -152,6 +157,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D2BD75A324BB2C4E00159ACD /* main.cpp in Sources */,
+				D2387A2425CED00B0059F93A /* Shader.cpp in Sources */,
 				D23F312A24BB45F200BFA637 /* glad.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
