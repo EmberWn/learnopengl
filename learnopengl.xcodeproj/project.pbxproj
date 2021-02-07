@@ -44,6 +44,7 @@
 		D2387A2325CED00B0059F93A /* Shader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Shader.hpp; sourceTree = "<group>"; };
 		D2387A2525CEE3910059F93A /* stb_image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = stb_image.cpp; sourceTree = "<group>"; };
 		D2387A2625CEE3910059F93A /* stb_image.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = stb_image.hpp; sourceTree = "<group>"; };
+		D2387A2825D02D510059F93A /* glm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = glm; sourceTree = "<group>"; };
 		D23F312924BB45F200BFA637 /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
 		D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../3rdparty/libs/libglfw.3.3.dylib; sourceTree = "<group>"; };
 		D2BD759F24BB2C4E00159ACD /* learnopengl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = learnopengl; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +85,7 @@
 		D2BD75A124BB2C4E00159ACD /* learnopengl */ = {
 			isa = PBXGroup;
 			children = (
+				D2387A2825D02D510059F93A /* glm */,
 				D2387A2225CED00B0059F93A /* Shader.cpp */,
 				D2387A2325CED00B0059F93A /* Shader.hpp */,
 				D23F312924BB45F200BFA637 /* glad.c */,
