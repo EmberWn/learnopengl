@@ -14,6 +14,7 @@
 		D23F312D24BB497000BFA637 /* libglfw.3.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		D2BD75A324BB2C4E00159ACD /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2BD75A224BB2C4E00159ACD /* main.cpp */; };
 		D2BD75AB24BB2CA500159ACD /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2BD75AA24BB2CA500159ACD /* OpenGL.framework */; };
+		D2E3223B25E7E8CD00DDE131 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2E3223925E7E8CD00DDE131 /* Camera.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -50,6 +51,8 @@
 		D2BD759F24BB2C4E00159ACD /* learnopengl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = learnopengl; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2BD75A224BB2C4E00159ACD /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D2BD75AA24BB2CA500159ACD /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		D2E3223925E7E8CD00DDE131 /* Camera.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Camera.cpp; sourceTree = "<group>"; };
+		D2E3223A25E7E8CD00DDE131 /* Camera.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Camera.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +95,8 @@
 				D2BD75A224BB2C4E00159ACD /* main.cpp */,
 				D2387A2525CEE3910059F93A /* stb_image.cpp */,
 				D2387A2625CEE3910059F93A /* stb_image.hpp */,
+				D2E3223925E7E8CD00DDE131 /* Camera.cpp */,
+				D2E3223A25E7E8CD00DDE131 /* Camera.hpp */,
 			);
 			path = learnopengl;
 			sourceTree = "<group>";
@@ -165,6 +170,7 @@
 			files = (
 				D2BD75A324BB2C4E00159ACD /* main.cpp in Sources */,
 				D2387A2725CEE3910059F93A /* stb_image.cpp in Sources */,
+				D2E3223B25E7E8CD00DDE131 /* Camera.cpp in Sources */,
 				D2387A2425CED00B0059F93A /* Shader.cpp in Sources */,
 				D23F312A24BB45F200BFA637 /* glad.c in Sources */,
 			);
