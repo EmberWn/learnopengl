@@ -100,6 +100,12 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
+glm::vec3 pointLightPositions[] = {
+    glm::vec3( 0.7f,  0.2f,  2.0f),
+    glm::vec3( 2.3f, -3.3f, -4.0f),
+    glm::vec3(-4.0f,  2.0f, -12.0f),
+    glm::vec3( 0.0f,  0.0f, -3.0f)
+};
 
 int main(int argc, const char * argv[])
 {
@@ -199,18 +205,10 @@ int main(int argc, const char * argv[])
     unsigned int diffuse_map = loadTexture("textures/container2.png");
     unsigned int specular_map = loadTexture("textures/container2_specular.png");
     
-    glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
-    glm::mat4 light_model = glm::mat4(1.0f);
-    light_model = glm::translate(light_model, light_pos);
-    light_model = glm::scale(light_model, glm::vec3(0.2f));
+   
     
     Shader our_shader("shader/shader.vs", "shader/shader.ps");
     our_shader.Use(); // don't forget to activate the shader before setting uniforms!
-    our_shader.SetVec3("light_color", 1.0f, 1.0f, 1.0f); // or with shader class
-    our_shader.SetVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    our_shader.SetFloat("material.shininess", 32.0f);
-    our_shader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
-    our_shader.SetVec3("light.position", light_pos);
 
     Shader light_shader("shader/light/light_shader.vs", "shader/light/light_shader.ps");
     light_shader.Use(); // don't forget to activate the shader before setting uniforms!
@@ -252,35 +250,88 @@ int main(int argc, const char * argv[])
         light_color = glm::vec3(1.0f, 1.0f, 1.0f);
         
         light_shader.Use();
-        light_shader.SetMatrix4("model", light_model);
         light_shader.SetMatrix4("view", camera.GetViewMatrix());
         light_shader.SetMatrix4("projection", projection);
         light_shader.SetVec3("light_color", light_color);
-        glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
         
+        glBindVertexArray(lightVAO);
+        for(unsigned int i = 0; i < 4; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f));
+            
+            light_shader.SetMatrix4("model", model);
+
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
         our_shader.Use();
-        our_shader.SetInt("material.specular", 1);
-        our_shader.SetInt("material.diffuse", 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuse_map);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specular_map);
-        glm::mat4 model = glm::mat4(1.0f);
-        
 
-        glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
-        glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
+
+        glm::vec3 diffuse_color = light_color * glm::vec3(0.8f);
+        glm::vec3 ambient_color = diffuse_color * glm::vec3(0.1f);
         
-        our_shader.SetVec3("light.ambient", ambient_color);
-        our_shader.SetVec3("light.diffuse", diffuse_color); // darken diffuse light a bit
-        our_shader.SetMatrix4("model", model);
+        our_shader.SetInt("material.diffuse", 0);
+        our_shader.SetInt("material.specular", 1);
+        our_shader.SetFloat("material.shininess", 32.0f);
+        
+        for(int i = 0; i < 4; ++i)
+        {
+            char uniform_str[100];
+            snprintf(uniform_str, sizeof(uniform_str), "point_lights[%d].constant", i);
+            our_shader.SetFloat(uniform_str, 1.0f);
+            snprintf(uniform_str, sizeof(uniform_str), "point_lights[%d].linear", i);
+            our_shader.SetFloat(uniform_str, 0.09f);
+            snprintf(uniform_str, sizeof(uniform_str), "point_lights[%d].quadratic", i);
+            our_shader.SetFloat(uniform_str, 0.032f);
+            
+            snprintf(uniform_str, sizeof(uniform_str), "point_lights[%d].specular", i);
+            our_shader.SetVec3(uniform_str, 1.0f, 1.0f, 1.0f);
+            snprintf(uniform_str, sizeof(uniform_str), "point_lights[%d].ambient", i);
+            our_shader.SetVec3(uniform_str, ambient_color);
+            snprintf(uniform_str, sizeof(uniform_str), "point_lights[%d].diffuse", i);
+            our_shader.SetVec3(uniform_str, diffuse_color); // darken diffuse light a bit
+            
+            snprintf(uniform_str, sizeof(uniform_str), "point_lights[%d].position", i);
+            our_shader.SetVec3(uniform_str, pointLightPositions[i]);
+        }
+
+        our_shader.SetVec3("dir_light.direction", -0.2f, -1.0f, -0.3f);
+        our_shader.SetVec3("dir_light.specular", 1.0f, 1.0f, 1.0f);
+        our_shader.SetVec3("dir_light.ambient", ambient_color);
+        our_shader.SetVec3("dir_light.diffuse", diffuse_color); // darken diffuse light a bit
+        
+        our_shader.SetVec3("spot_light.specular", 1.0f, 1.0f, 1.0f);
+        our_shader.SetVec3("spot_light.ambient", ambient_color);
+        our_shader.SetVec3("spot_light.diffuse", diffuse_color); // darken diffuse light a bit
+        our_shader.SetVec3("spot_light.direction", camera.Front);
+        our_shader.SetVec3("spot_light.position", camera.Position);
+        our_shader.SetFloat("spot_light.cut_off", glm::cos(glm::radians(12.5f)));
+        our_shader.SetFloat("spot_light.outer_cut_off", glm::cos(glm::radians(17.5f)));
+        
         our_shader.SetMatrix4("view", camera.GetViewMatrix());
         our_shader.SetMatrix4("projection", projection);
         our_shader.SetVec3("view_pos", camera.Position);
 
+        
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for(unsigned int i = 0; i < 10; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            our_shader.SetMatrix4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
         glBindVertexArray(0);
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
