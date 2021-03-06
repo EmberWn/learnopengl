@@ -11,10 +11,12 @@
 		D2387A2725CEE3910059F93A /* stb_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2387A2525CEE3910059F93A /* stb_image.cpp */; };
 		D23F312A24BB45F200BFA637 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D23F312924BB45F200BFA637 /* glad.c */; };
 		D23F312C24BB497000BFA637 /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */; };
-		D23F312D24BB497000BFA637 /* libglfw.3.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		D296935225EFD26C00804955 /* libassimp.4.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D296935125EFD26C00804955 /* libassimp.4.1.0.dylib */; };
 		D2BD75A324BB2C4E00159ACD /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2BD75A224BB2C4E00159ACD /* main.cpp */; };
 		D2BD75AB24BB2CA500159ACD /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2BD75AA24BB2CA500159ACD /* OpenGL.framework */; };
 		D2E3223B25E7E8CD00DDE131 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2E3223925E7E8CD00DDE131 /* Camera.cpp */; };
+		D2ECF6DD25F31D47002F0AB3 /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECF6DB25F31D47002F0AB3 /* Mesh.cpp */; };
+		D2ECF6E025F327F2002F0AB3 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2ECF6DE25F327F2002F0AB3 /* Model.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +26,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D23F312D24BB497000BFA637 /* libglfw.3.3.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -32,8 +33,8 @@
 		D2BD759D24BB2C4E00159ACD /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			dstPath = usr/share/man/man1;
+			dstSubfolderSpec = 10;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 1;
@@ -48,11 +49,16 @@
 		D2387A2825D02D510059F93A /* glm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = glm; sourceTree = "<group>"; };
 		D23F312924BB45F200BFA637 /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
 		D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../3rdparty/libs/libglfw.3.3.dylib; sourceTree = "<group>"; };
+		D296935125EFD26C00804955 /* libassimp.4.1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libassimp.4.1.0.dylib; path = ../../3rdparty/libs/libassimp.4.1.0.dylib; sourceTree = "<group>"; };
 		D2BD759F24BB2C4E00159ACD /* learnopengl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = learnopengl; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2BD75A224BB2C4E00159ACD /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D2BD75AA24BB2CA500159ACD /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		D2E3223925E7E8CD00DDE131 /* Camera.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Camera.cpp; sourceTree = "<group>"; };
 		D2E3223A25E7E8CD00DDE131 /* Camera.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Camera.hpp; sourceTree = "<group>"; };
+		D2ECF6DB25F31D47002F0AB3 /* Mesh.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Mesh.cpp; sourceTree = "<group>"; };
+		D2ECF6DC25F31D47002F0AB3 /* Mesh.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mesh.hpp; sourceTree = "<group>"; };
+		D2ECF6DE25F327F2002F0AB3 /* Model.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Model.cpp; sourceTree = "<group>"; };
+		D2ECF6DF25F327F2002F0AB3 /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D296935225EFD26C00804955 /* libassimp.4.1.0.dylib in Frameworks */,
 				D23F312C24BB497000BFA637 /* libglfw.3.3.dylib in Frameworks */,
 				D2BD75AB24BB2CA500159ACD /* OpenGL.framework in Frameworks */,
 			);
@@ -97,6 +104,10 @@
 				D2387A2625CEE3910059F93A /* stb_image.hpp */,
 				D2E3223925E7E8CD00DDE131 /* Camera.cpp */,
 				D2E3223A25E7E8CD00DDE131 /* Camera.hpp */,
+				D2ECF6DB25F31D47002F0AB3 /* Mesh.cpp */,
+				D2ECF6DC25F31D47002F0AB3 /* Mesh.hpp */,
+				D2ECF6DE25F327F2002F0AB3 /* Model.cpp */,
+				D2ECF6DF25F327F2002F0AB3 /* Model.hpp */,
 			);
 			path = learnopengl;
 			sourceTree = "<group>";
@@ -104,6 +115,7 @@
 		D2BD75A924BB2CA500159ACD /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D296935125EFD26C00804955 /* libassimp.4.1.0.dylib */,
 				D23F312B24BB497000BFA637 /* libglfw.3.3.dylib */,
 				D2BD75AA24BB2CA500159ACD /* OpenGL.framework */,
 			);
@@ -168,9 +180,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2ECF6DD25F31D47002F0AB3 /* Mesh.cpp in Sources */,
 				D2BD75A324BB2C4E00159ACD /* main.cpp in Sources */,
 				D2387A2725CEE3910059F93A /* stb_image.cpp in Sources */,
 				D2E3223B25E7E8CD00DDE131 /* Camera.cpp in Sources */,
+				D2ECF6E025F327F2002F0AB3 /* Model.cpp in Sources */,
 				D2387A2425CED00B0059F93A /* Shader.cpp in Sources */,
 				D23F312A24BB45F200BFA637 /* glad.c in Sources */,
 			);
@@ -291,6 +305,7 @@
 		D2BD75A724BB2C4E00159ACD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6WVKF6Y4GG;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -305,17 +320,20 @@
 					"-I\"glfw3.3\"",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Debug;
 		};
 		D2BD75A824BB2C4E00159ACD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6WVKF6Y4GG;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LIBRARY_SEARCH_PATHS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Release;
 		};
