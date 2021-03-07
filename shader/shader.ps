@@ -4,6 +4,8 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoords;
 
+uniform sampler2D texture1;
+
 struct Material
 {
    sampler2D diffuse;
@@ -64,22 +66,37 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir)
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 frag_pos, vec3 view_dir);
 
 uniform vec3 view_pos;
+
+float near = 0.1;
+float far = 100.0;
+
+float LinearizeDepth(float depth)
+{
+   float z = depth * 2.0 - 1.0;
+   return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
 void main()
 {
-   vec3 norm = normalize(Normal);
-   vec3 view_dir = normalize(view_pos - FragPos);
+   // vec3 norm = normalize(Normal);
+   // vec3 view_dir = normalize(view_pos - FragPos);
 
-   vec3 result = vec3(0.0, 0.0, 0.0);
+   // vec3 result = vec3(0.0, 0.0, 0.0);
 
-   result += CalcSpotLight(spot_light, norm, FragPos, view_dir);
-   result += CalcDirLight(dir_light, norm, view_dir);
+   // result += CalcSpotLight(spot_light, norm, FragPos, view_dir);
+   // result += CalcDirLight(dir_light, norm, view_dir);
 
-   for(int i = 0; i < NR_POINT_LIGHTS; ++i)
-   {
-      result += CalcPointLight(point_lights[i], norm, FragPos, view_dir);
-   }
+   // for(int i = 0; i < NR_POINT_LIGHTS; ++i)
+   // {
+   //    result += CalcPointLight(point_lights[i], norm, FragPos, view_dir);
+   // }
 
-   FragColor = vec4(result, 1.0);
+   // FragColor = vec4(result, 1.0);
+
+   float depth = LinearizeDepth(gl_FragCoord.z) / far;
+   FragColor = texture(texture1, TexCoords);
+   FragColor = vec4(vec3(gl_FragCoord.z), 1.0f);
+   FragColor = vec4(vec3(depth), 1.0f);
 
 }
 
