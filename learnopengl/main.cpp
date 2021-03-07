@@ -166,13 +166,23 @@ int main(int argc, const char * argv[])
     our_shader.Use(); // don't forget to activate the shader before setting uniforms!
     our_shader.SetInt("texture1", 0);
     Model model("model/backpack/backpack.obj");
+    
+    Shader shader_single_color("shader/light/light_shader.vs", "shader/light/light_shader.ps");
+    shader_single_color.Use();
 
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    // depth and stencil pass replace stencil value
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     // render loop
     // -----------
-    while(!glfwWindowShouldClose(window)
+    while(!glfwWindowShouldClose(window))
     {
         
         float  current_frame = glfwGetTime();
@@ -192,9 +202,9 @@ int main(int argc, const char * argv[])
 
         // render
         // ------
-        glEnable(GL_DEPTH_TEST);
+        
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         
         glm::vec3 light_color;
         light_color = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -227,7 +237,17 @@ int main(int argc, const char * argv[])
 //        model.Draw(our_shader);
         glm::mat4 model = glm::mat4(1.0f);
         
+        // floor
+        glStencilMask(0x00);
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        our_shader.SetMatrix4("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+        
         // cubes
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);    // can write stencil value
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
@@ -238,13 +258,33 @@ int main(int argc, const char * argv[])
         model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
         our_shader.SetMatrix4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        // floor
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        our_shader.SetMatrix4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        
+        // cubes outline
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        shader_single_color.Use();
+        shader_single_color.SetMatrix4("view", camera.GetViewMatrix());
+        shader_single_color.SetMatrix4("projection", projection);
 
+        float scale = 1.05;
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        shader_single_color.SetMatrix4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        shader_single_color.SetMatrix4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0XFF);
+        glEnable(GL_DEPTH_TEST);
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
