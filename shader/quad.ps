@@ -60,14 +60,14 @@ void main()
     // origin
     FragColor = tex_color;
 
-    // inverse
-    FragColor = vec4(vec3(1 - tex_color), 1.0); 
+    // // inverse
+    // FragColor = vec4(vec3(1 - tex_color), 1.0); 
 
-    // gray_scale
-    FragColor = tex_color;
-    float average = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
-    FragColor = vec4(average, average, average, 1.0);
+    // // gray_scale
+    // FragColor = tex_color;
+    // float average = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
+    // FragColor = vec4(average, average, average, 1.0);
 
-    // kernel effects
-    FragColor = vec4(Kernel(), 1.0);
+    // // kernel effects
+    // FragColor = vec4(Kernel(), 1.0);
 }
