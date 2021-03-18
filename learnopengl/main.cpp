@@ -166,6 +166,13 @@ float skyboxVertices[] = {
      1.0f, -1.0f,  1.0f
 };
 
+float points[] = {
+    -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+     0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+    -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+};
+
 int main(int argc, const char * argv[])
 {
     // glfw: initialize and configure
@@ -239,6 +246,18 @@ int main(int argc, const char * argv[])
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     
+    // simple VAO
+    unsigned int simpleVAO, simpleVBO;
+    glGenVertexArrays(1, &simpleVAO);
+    glGenBuffers(1, &simpleVBO);
+    glBindVertexArray(simpleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, simpleVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), &points, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
     
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -310,35 +329,40 @@ int main(int argc, const char * argv[])
         std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    Shader our_shader("shader/shader.vs", "shader/shader.ps");
+    Shader our_shader("shader/shader.vs", "shader/shader.ps", "shader/simple.gs");
     our_shader.Use(); // don't forget to activate the shader before setting uniforms!
-    our_shader.SetInt("texture1", 0);
-
-    Shader shader_single_color("shader/light/light_shader.vs", "shader/light/light_shader.ps");
-    shader_single_color.Use();
-
-    Shader quad_shader("shader/quad.vs", "shader/quad.ps");
-    quad_shader.Use();
-    quad_shader.SetInt("screen_texture", 0);
-
-    Shader skybox_shader("shader/skybox.vs", "shader/skybox.ps");
-    skybox_shader.Use();
     
-    Shader environment_map("shader/environment_map.vs", "shader/environment_map.ps");
-    environment_map.Use();
+    Shader normal_view_shader("shader/normal_view.vs", "shader/normal_view.ps", "shader/normal_view.gs");
+    normal_view_shader.Use();
+//
+//    Shader shader_single_color("shader/light/light_shader.vs", "shader/light/light_shader.ps");
+//    shader_single_color.Use();
+//
+//    Shader quad_shader("shader/quad.vs", "shader/quad.ps");
+//    quad_shader.Use();
+//    quad_shader.SetInt("screen_texture", 0);
+//
+//    Shader skybox_shader("shader/skybox.vs", "shader/skybox.ps");
+//    skybox_shader.Use();
+//
+//    Shader environment_map("shader/environment_map.vs", "shader/environment_map.ps");
+//    environment_map.Use();
     stbi_set_flip_vertically_on_load(true);
     Model model("model/backpack/backpack.obj");
     stbi_set_flip_vertically_on_load(false);
+    
+//    Shader simple_shader("shader/simple.vs", "shader/simple.ps", "shader/simple.gs");
+//    simple_shader.Use();
 
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+//    glEnable(GL_STENCIL_TEST);
+//    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     // depth and stencil test pass, then replace stencil value
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+//    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 //    glEnable(GL_CULL_FACE);
@@ -362,123 +386,26 @@ int main(int argc, const char * argv[])
 
         glm::mat4 projection;
         projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
-        
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-        glEnable(GL_DEPTH_TEST);
 
         // render
         // ------
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         
-        // environment map
-        environment_map.Use();
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubmapTexture);
-        environment_map.SetMatrix4("view", camera.GetViewMatrix());
-        environment_map.SetMatrix4("projection", projection);
-        environment_map.SetVec3("view_pos", camera.Position);
-        glm::mat4 model_mat = glm::mat4(1.0f);
-        model_mat = glm::translate(model_mat, glm::vec3(0.0f, 2.0f, 0.0f));
-        environment_map.SetMatrix4("model", model_mat);
-        model.Draw(environment_map);
-
-        glm::vec3 light_color;
-        light_color = glm::vec3(1.0f, 1.0f, 1.0f);
-//
+        // draw model
         our_shader.Use();
-//
-        glm::vec3 diffuse_color = light_color * glm::vec3(0.8f);
-        glm::vec3 ambient_color = diffuse_color * glm::vec3(0.1f);
-
-        our_shader.SetFloat("material.shininess", 64.0f);
-
-        our_shader.SetVec3("dir_light.direction", -0.2f, -1.0f, -0.3f);
-        our_shader.SetVec3("dir_light.specular", 1.0f, 1.0f, 1.0f);
-        our_shader.SetVec3("dir_light.ambient", ambient_color);
-        our_shader.SetVec3("dir_light.diffuse", diffuse_color); // darken diffuse light a bit
-
-        our_shader.SetVec3("spot_light.specular", 1.0f, 1.0f, 1.0f);
-        our_shader.SetVec3("spot_light.ambient", ambient_color);
-        our_shader.SetVec3("spot_light.diffuse", diffuse_color); // darken diffuse light a bit
-        our_shader.SetVec3("spot_light.direction", camera.Front);
-        our_shader.SetVec3("spot_light.position", camera.Position);
-        our_shader.SetFloat("spot_light.cut_off", glm::cos(glm::radians(12.5f)));
-        our_shader.SetFloat("spot_light.outer_cut_off", glm::cos(glm::radians(17.5f)));
-//
-        our_shader.SetMatrix4("view", camera.GetViewMatrix());
         our_shader.SetMatrix4("projection", projection);
-        our_shader.SetVec3("view_pos", camera.Position);
+        our_shader.SetMatrix4("view", camera.GetViewMatrix());
         our_shader.SetMatrix4("model", glm::mat4(1.0f));
-
-        glm::mat4 model = glm::mat4(1.0f);
-
-        // floor
-        glStencilMask(0x00);
-        glBindVertexArray(planeVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        our_shader.SetMatrix4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
-
-        // cubes
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);    // can write stencil value
-        glBindVertexArray(cubeVAO);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        our_shader.SetMatrix4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        our_shader.SetMatrix4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // draw order
-        // opaque
-        // sort transparent
-        // draw transparent
-        // windows
-        std::map<float, glm::vec3> sorted;
-        for (unsigned int i = 0; i < windows.size(); i++)
-        {
-            float distance = glm::length(camera.Position - windows[i]);
-            sorted[distance] = windows[i];
-        }
-
-        glBindVertexArray(transparentVAO);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        // draw from far to near
-        for(std::map<float,glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            our_shader.SetMatrix4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-
-        glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LEQUAL);
-        skybox_shader.Use();
-        skybox_shader.SetMatrix4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
-        skybox_shader.SetMatrix4("projection", projection);
-        glBindVertexArray(skyboxVAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubmapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glDepthMask(GL_TRUE);
-
-        // draw quad scene
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        quad_shader.Use();
-        glBindVertexArray(quadVAO);
-        glBindTexture(GL_TEXTURE_2D, textureColorbuffer);    // use the color attachment texture as the texture of the quad plane
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        model.Draw(our_shader);
         
+        normal_view_shader.Use();
+        normal_view_shader.SetMatrix4("projection", projection);
+        normal_view_shader.SetMatrix4("view", camera.GetViewMatrix());
+        normal_view_shader.SetMatrix4("model", glm::mat4(1.0f));
+        model.Draw(normal_view_shader);
+
         
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
