@@ -30,6 +30,8 @@ public:
     
     void Draw(Shader &shader);
     
+    const std::vector<Mesh> & GetMeshs() { return meshs; }
+    
 private:
     std::vector<Mesh> meshs;
     std::string directory;

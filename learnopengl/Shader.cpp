@@ -12,29 +12,29 @@ Shader::Shader(const char* vertex_path, const char* fragment_path, const char* g
 {
     std::string vertex_code;
     std::string fragment_code;
-    std::string geometry_code;
+//    std::string geometry_code;
     std::ifstream v_shader_file;
     std::ifstream f_shader_file;
-    std::ifstream g_shader_file;
+//    std::ifstream g_shader_file;
     
     v_shader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     f_shader_file.exceptions(std::ifstream::failbit | std::ifstream:: badbit);
-    g_shader_file.exceptions(std::ifstream::failbit | std::ifstream:: badbit);
+//    g_shader_file.exceptions(std::ifstream::failbit | std::ifstream:: badbit);
     
     try {
         v_shader_file.open(vertex_path);
         f_shader_file.open(fragment_path);
-        g_shader_file.open(geometry_path);
+//        g_shader_file.open(geometry_path);
         std::stringstream v_shader_stream, f_shader_stream, g_shader_stream;
         v_shader_stream << v_shader_file.rdbuf();
         f_shader_stream << f_shader_file.rdbuf();
-        g_shader_stream << g_shader_file.rdbuf();
+//        g_shader_stream << g_shader_file.rdbuf();
         v_shader_file.close();
         f_shader_file.close();
-        g_shader_file.close();
+//        g_shader_file.close();
         vertex_code = v_shader_stream.str();
         fragment_code = f_shader_stream.str();
-        geometry_code = g_shader_stream.str();
+//        geometry_code = g_shader_stream.str();
     }
     catch (std::ifstream::failure e)
     {
@@ -43,7 +43,7 @@ Shader::Shader(const char* vertex_path, const char* fragment_path, const char* g
     
     const char* v_shader_code = vertex_code.c_str();
     const char* f_shader_code = fragment_code.c_str();
-    const char* g_shader_code = geometry_code.c_str();
+//    const char* g_shader_code = geometry_code.c_str();
     
     // vertex shader
     unsigned int VertexShader;
@@ -73,23 +73,23 @@ Shader::Shader(const char* vertex_path, const char* fragment_path, const char* g
         std::cout << "ERROR::SHADER::FRAGEMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
     
-    // geometry shader
-    unsigned int GeometryShader;
-    GeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
-    glShaderSource(GeometryShader, 1, &g_shader_code, NULL);
-    glCompileShader(GeometryShader);
-    
-    glGetShaderiv(GeometryShader, GL_COMPILE_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(GeometryShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
+//    // geometry shader
+//    unsigned int GeometryShader;
+//    GeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+//    glShaderSource(GeometryShader, 1, &g_shader_code, NULL);
+//    glCompileShader(GeometryShader);
+//
+//    glGetShaderiv(GeometryShader, GL_COMPILE_STATUS, &success);
+//    if(!success)
+//    {
+//        glGetShaderInfoLog(GeometryShader, 512, NULL, infoLog);
+//        std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
+//    }
     // link shaders
     m_id = glCreateProgram();
     glAttachShader(m_id, VertexShader);
     glAttachShader(m_id, FragmentShader);
-    glAttachShader(m_id, GeometryShader);
+//    glAttachShader(m_id, GeometryShader);
     glLinkProgram(m_id);
     
     glGetProgramiv(m_id, GL_LINK_STATUS, &success);
@@ -100,7 +100,7 @@ Shader::Shader(const char* vertex_path, const char* fragment_path, const char* g
     
     glDeleteShader(VertexShader);
     glDeleteShader(FragmentShader);
-    glDeleteShader(GeometryShader);
+//    glDeleteShader(GeometryShader);
 }
 
 void Shader::Use()
@@ -139,4 +139,10 @@ void Shader::SetVec3(const std::string &name, float x, float y, float z) const
 void Shader::SetVec3(const std::string &name, glm::vec3 vec) const
 {
     SetVec3(name, vec.x, vec.y, vec.z);
+}
+
+void Shader::SetVec2(const std::string &name, glm::vec2 vec) const
+{
+    unsigned int location = glGetUniformLocation(m_id, name.c_str());
+    glUniform2f(location, vec.x, vec.y);
 }

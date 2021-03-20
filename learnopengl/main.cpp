@@ -110,17 +110,16 @@ float transparentVertices[] = {
     1.0f,  0.5f,  0.0f,  1.0f,  0.0f
 };
 
-float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-    // positions   // texCoords
-    -1.0f,  1.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f,  0.0f, 0.0f,
-     1.0f, -1.0f,  1.0f, 0.0f,
+float quadVertices[] = {
+    // positions     // colors
+    -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+    -0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
 
-    -1.0f,  1.0f,  0.0f, 1.0f,
-     1.0f, -1.0f,  1.0f, 0.0f,
-     1.0f,  1.0f,  1.0f, 1.0f
+    -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+     0.05f,  0.05f,  0.0f, 1.0f, 1.0f
 };
-
 float skyboxVertices[] = {
     // positions
     -1.0f,  1.0f, -1.0f,
@@ -242,9 +241,53 @@ int main(int argc, const char * argv[])
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+    
+    unsigned int amount = 5000;
+    glm::mat4 *modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    srand(glfwGetTime());
+    float radius = 80.0;
+    float offset = 15.0f;
+    
+    for(unsigned int i = 0; i < amount; ++i)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        model = glm::translate(model, glm::vec3(x, y, z));
+
+        // 2. scale: scale between 0.05 and 0.25f
+        float scale = (rand() % 20) / 100.0f + 0.05;
+        model = glm::scale(model, glm::vec3(scale));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+        // 4. now add to list of matrices
+        modelMatrices[i] = model;
+    }
+    
+//    // instance
+//    unsigned int instanceVBO;
+//    glGenBuffers(1, &instanceVBO);
+//    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glEnableVertexAttribArray(2);
+//    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+//    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glVertexAttribDivisor(2, 1);
     
     // simple VAO
     unsigned int simpleVAO, simpleVBO;
@@ -289,6 +332,38 @@ int main(int argc, const char * argv[])
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
     
+    stbi_set_flip_vertically_on_load(true);
+    Model planet("model/planet/planet.obj");
+    Model rock("model/rock/rock.obj");
+    stbi_set_flip_vertically_on_load(false);
+    
+    // rock VAO
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    
+    for (unsigned int i = 0; i < rock.GetMeshs().size(); ++i) {
+        unsigned int VAO = (rock.GetMeshs()[i]).GetVAO();
+        glBindVertexArray(VAO);
+        std::size_t vec4Size = sizeof(glm::vec4);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(1 * vec4Size));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
+        
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+        
+        glBindVertexArray(0);
+    }
+    
 
     unsigned int cubeTexture  = loadTexture("textures/container.jpg");
     unsigned int floorTexture = loadTexture("textures/metal.png");
@@ -328,18 +403,22 @@ int main(int argc, const char * argv[])
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    
+    
     Shader our_shader("shader/shader.vs", "shader/shader.ps", "shader/simple.gs");
     our_shader.Use(); // don't forget to activate the shader before setting uniforms!
     
-    Shader normal_view_shader("shader/normal_view.vs", "shader/normal_view.ps", "shader/normal_view.gs");
-    normal_view_shader.Use();
+    Shader shader_instance("shader/shader_instance.vs", "shader/shader_instance.ps");
+    shader_instance.Use(); // don't forget to activate the shader before setting uniforms!
+    
+//    Shader normal_view_shader("shader/normal_view.vs", "shader/normal_view.ps", "shader/normal_view.gs");
+//    normal_view_shader.Use();
 //
 //    Shader shader_single_color("shader/light/light_shader.vs", "shader/light/light_shader.ps");
 //    shader_single_color.Use();
 //
-//    Shader quad_shader("shader/quad.vs", "shader/quad.ps");
-//    quad_shader.Use();
+    Shader quad_shader("shader/quad.vs", "shader/quad.ps");
+    quad_shader.Use();
 //    quad_shader.SetInt("screen_texture", 0);
 //
 //    Shader skybox_shader("shader/skybox.vs", "shader/skybox.ps");
@@ -347,9 +426,9 @@ int main(int argc, const char * argv[])
 //
 //    Shader environment_map("shader/environment_map.vs", "shader/environment_map.ps");
 //    environment_map.Use();
-    stbi_set_flip_vertically_on_load(true);
-    Model model("model/backpack/backpack.obj");
-    stbi_set_flip_vertically_on_load(false);
+//    stbi_set_flip_vertically_on_load(true);
+//    Model model("model/backpack/backpack.obj");
+//    stbi_set_flip_vertically_on_load(false);
     
 //    Shader simple_shader("shader/simple.vs", "shader/simple.ps", "shader/simple.gs");
 //    simple_shader.Use();
@@ -393,18 +472,25 @@ int main(int argc, const char * argv[])
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         
-        // draw model
+        // draw planet
         our_shader.Use();
         our_shader.SetMatrix4("projection", projection);
         our_shader.SetMatrix4("view", camera.GetViewMatrix());
-        our_shader.SetMatrix4("model", glm::mat4(1.0f));
-        model.Draw(our_shader);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+        our_shader.SetMatrix4("model", model);
+        planet.Draw(our_shader);
         
-        normal_view_shader.Use();
-        normal_view_shader.SetMatrix4("projection", projection);
-        normal_view_shader.SetMatrix4("view", camera.GetViewMatrix());
-        normal_view_shader.SetMatrix4("model", glm::mat4(1.0f));
-        model.Draw(normal_view_shader);
+        // draw instance model
+        shader_instance.Use();
+        shader_instance.SetMatrix4("projection", projection);
+        shader_instance.SetMatrix4("view", camera.GetViewMatrix());
+        for (unsigned int i = 0; i < rock.GetMeshs().size(); ++i) {
+            glBindVertexArray(rock.GetMeshs()[i].GetVAO());
+            glDrawElementsInstanced(GL_TRIANGLES, rock.GetMeshs()[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
+        }
+        
 
         
         
