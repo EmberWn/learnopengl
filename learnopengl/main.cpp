@@ -89,14 +89,14 @@ float cubeVertices[] = {
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left
 };
 float planeVertices[] = {
-    // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
-     5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-    -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-    -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+    // positions            // normals         // texcoords
+     10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+    -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
 
-     5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-    -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-     5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+     10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+     10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
 };
 
 float transparentVertices[] = {
@@ -188,6 +188,7 @@ int main(int argc, const char * argv[])
     
     // glfw window creation
     // --------------------
+//    glfwWindowHint(GLFW_SAMPLES, 4);
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
@@ -228,9 +229,11 @@ int main(int argc, const char * argv[])
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glBindVertexArray(0);
     
     // screen quad VAO
@@ -276,18 +279,6 @@ int main(int argc, const char * argv[])
         // 4. now add to list of matrices
         modelMatrices[i] = model;
     }
-    
-//    // instance
-//    unsigned int instanceVBO;
-//    glGenBuffers(1, &instanceVBO);
-//    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);
-//    glBindBuffer(GL_ARRAY_BUFFER, 0);
-//    glEnableVertexAttribArray(2);
-//    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-//    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-//    glBindBuffer(GL_ARRAY_BUFFER, 0);
-//    glVertexAttribDivisor(2, 1);
     
     // simple VAO
     unsigned int simpleVAO, simpleVBO;
@@ -368,6 +359,7 @@ int main(int argc, const char * argv[])
     unsigned int cubeTexture  = loadTexture("textures/container.jpg");
     unsigned int floorTexture = loadTexture("textures/metal.png");
     unsigned int transparentTexture = loadTexture("textures/blending_transparent_window.png");
+    unsigned int woodTexture = loadTexture("textures/wood.png");
     
     std::vector<std::string> faces
     {
@@ -407,6 +399,7 @@ int main(int argc, const char * argv[])
     
     Shader our_shader("shader/shader.vs", "shader/shader.ps", "shader/simple.gs");
     our_shader.Use(); // don't forget to activate the shader before setting uniforms!
+    our_shader.SetInt("texture1", 0);
     
     Shader shader_instance("shader/shader_instance.vs", "shader/shader_instance.ps");
     shader_instance.Use(); // don't forget to activate the shader before setting uniforms!
@@ -421,8 +414,8 @@ int main(int argc, const char * argv[])
     quad_shader.Use();
 //    quad_shader.SetInt("screen_texture", 0);
 //
-//    Shader skybox_shader("shader/skybox.vs", "shader/skybox.ps");
-//    skybox_shader.Use();
+    Shader skybox_shader("shader/skybox.vs", "shader/skybox.ps");
+    skybox_shader.Use();
 //
 //    Shader environment_map("shader/environment_map.vs", "shader/environment_map.ps");
 //    environment_map.Use();
@@ -445,6 +438,7 @@ int main(int argc, const char * argv[])
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 //    glEnable(GL_CULL_FACE);
+//    glEnable(GL_MULTISAMPLE);
     
 
     // render loop
@@ -463,37 +457,30 @@ int main(int argc, const char * argv[])
         // -----
 
 
+        glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
         glm::mat4 projection;
         projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
 
         // render
         // ------
+        
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         
-        // draw planet
         our_shader.Use();
         our_shader.SetMatrix4("projection", projection);
         our_shader.SetMatrix4("view", camera.GetViewMatrix());
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
-        our_shader.SetMatrix4("model", model);
-        planet.Draw(our_shader);
-        
-        // draw instance model
-        shader_instance.Use();
-        shader_instance.SetMatrix4("projection", projection);
-        shader_instance.SetMatrix4("view", camera.GetViewMatrix());
-        for (unsigned int i = 0; i < rock.GetMeshs().size(); ++i) {
-            glBindVertexArray(rock.GetMeshs()[i].GetVAO());
-            glDrawElementsInstanced(GL_TRIANGLES, rock.GetMeshs()[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
-        }
+        our_shader.SetMatrix4("model", glm::mat4(1.0f));
+        our_shader.SetVec3("viewpos", camera.Position);
+        our_shader.SetVec3("lightPos", lightPos);
+        our_shader.SetBool("blinn", true);
+        glBindVertexArray(planeVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         
 
-        
-        
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
