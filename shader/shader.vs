@@ -16,12 +16,16 @@ out VS_OUT
 } vs_out;
 
 out vec2 TexCoords;
+uniform bool reverse_normals;
 
 void main()
 {
    gl_Position = projection * view * model * vec4(aPos, 1.0);
    FragPos = vec3(model * vec4(aPos, 1.0));
-   Normal = mat3(transpose(inverse(model))) * aNormal;
+   if(reverse_normals) // a slight hack to make sure the outer large cube displays lighting from the 'inside' instead of the default 'outside'.
+        Normal = transpose(inverse(mat3(model))) * (-1.0 * aNormal);
+    else
+        Normal = transpose(inverse(mat3(model))) * aNormal;
    vs_out.texCoords = aTexCoord;
    TexCoords = aTexCoord;
 
