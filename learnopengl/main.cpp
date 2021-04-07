@@ -47,6 +47,8 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+float heightScale = 0.1f;
+
 // meshes
 unsigned int planeVAO;
 
@@ -128,8 +130,9 @@ int main()
     // load textures
     // -------------
     unsigned int woodTexture = loadTexture("textures/wood.png");
-    unsigned int normalTexture = loadTexture("textures/brickwall_normal.jpg");
-    unsigned int brickwallTexture = loadTexture("textures/brickwall.jpg");
+    unsigned int normalTexture = loadTexture("textures/toy_box_normal.png");
+    unsigned int brickwallTexture = loadTexture("textures/bricks2.jpg");
+    unsigned int brickDisplacementTexture = loadTexture("textures/toy_box_disp.png");
 
     // configure depth map FBO
     // -----------------------
@@ -169,6 +172,7 @@ int main()
     shader.Use();
     shader.SetInt("texture_diffuse", 0);
     shader.SetInt("texture_normal", 1);
+    shader.SetInt("depthMap", 2);
     
 
 
@@ -213,12 +217,15 @@ int main()
         shader.SetVec3("viewPos", camera.Position);
         shader.SetVec3("lightPos", lightPos);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime() * -1.0f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+//        model = glm::rotate(model, (float)glfwGetTime() * -1.0f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
         shader.SetMatrix4("model", model);
+        shader.SetFloat("heightScale", heightScale);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, brickwallTexture);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, normalTexture);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, brickDisplacementTexture);
         renderQuad();
 
 
@@ -469,11 +476,25 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        camera.ProcessKeyboard(UP, deltaTime);
+//    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+//        camera.ProcessKeyboard(UP, deltaTime);
+//    }
+//    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+//        camera.ProcessKeyboard(DOWN, deltaTime);
+//    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (heightScale > 0.0f)
+            heightScale -= 0.0005f;
+        else
+            heightScale = 0.0f;
     }
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        camera.ProcessKeyboard(DOWN, deltaTime);
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        if (heightScale < 1.0f)
+            heightScale += 0.0005f;
+        else
+            heightScale = 1.0f;
     }
 
 }
