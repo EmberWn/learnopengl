@@ -93,17 +93,21 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // build and compile shaders
     // -------------------------
     Shader shaderPBR("shader/pbr/pbr.vs", "shader/pbr/pbr.ps");
     Shader equirectangularToCubmapShader("shader/IBL/cubemap.vs", "shader/IBL/equirectangular_to_cubemap.ps");
     Shader irradianceShader("shader/IBL/cubemap.vs", "shader/IBL/irradiance_convolution.ps");
+    Shader prefilterShader("shader/IBL/cubemap.vs", "shader/IBL/prefilter.ps");
     Shader backgroundShader("shader/IBL/background.vs", "shader/IBL/background.ps");
+    Shader brdfShader("shader/quad.vs", "shader/IBL/brdf.ps");
+    Shader displayShader("shader/quad.vs", "shader/quad.ps");
     
     shaderPBR.Use();
-//    shaderPBR.SetVec3("albedo", 0.5f, 0.0f, 0.0f);
-//    shaderPBR.SetFloat("ao", 1.0f);
+    shaderPBR.SetVec3("albedo", 0.5f, 0.0f, 0.0f);
+    shaderPBR.SetFloat("ao", 1.0f);
     shaderPBR.SetInt("albedoMap", 0);
     shaderPBR.SetInt("normalMap", 1);
     shaderPBR.SetInt("metallicMap", 2);
@@ -132,6 +136,20 @@ int main()
     int nrColumns = 7;
     float spacing = 2.5;
     
+    unsigned int prefilterMap;
+    glGenTextures(1, &prefilterMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+    for(unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     //pbr: setup framebuffer
     unsigned int captureFBO;
     unsigned int captureRBO;
@@ -179,7 +197,7 @@ int main()
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -210,6 +228,9 @@ int main()
         
         renderCube();
     }
+    
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     
     unsigned int irradianceMap;
     glGenTextures(1, &irradianceMap);
@@ -244,7 +265,61 @@ int main()
         renderCube();
     }
     
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
+    // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
+    // ----------------------------------------------------------------------------------------------------
+    prefilterShader.Use();
+    prefilterShader.SetInt("environmentMap", 0);
+    prefilterShader.SetMatrix4("projection", captureProjection);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    unsigned int maxMipLevels = 5;
+    unsigned int mip = 0;
+    for(; mip < maxMipLevels; ++mip)
+    {
+        unsigned int mipWidth = 128 * std::pow(0.5, mip);
+        unsigned int mipHeight = 128 * std::pow(0.5, mip);
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+        glViewport(0, 0, mipWidth, mipHeight);
+        
+        float roughness = (float)mip / (float)(maxMipLevels - 1);
+        prefilterShader.SetFloat("roughness", roughness);
+        for(unsigned int i = 0; i < 6; ++i)
+        {
+            prefilterShader.SetMatrix4("view", captureViews[i]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
+            
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            renderCube();
+        }
+    }
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    unsigned int brdfLUTTexture;
+    glGenTextures(1, &brdfLUTTexture);
+    
+    glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUTTexture, 0);
+    
+    glViewport(0, 0, 512, 512);
+    brdfShader.Use();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderQuad();
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
@@ -296,6 +371,8 @@ int main()
         shaderPBR.SetMatrix4("view", view);
         shaderPBR.SetVec3("camPos", camera.Position);
         shaderPBR.SetInt("irradianceMap", 5);
+        shaderPBR.SetInt("prefilterMap", 6);
+        shaderPBR.SetInt("brdfLUT", 7);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, albedo);
@@ -309,6 +386,10 @@ int main()
         glBindTexture(GL_TEXTURE_2D, ao);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
         
         for(unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
         {
@@ -327,12 +408,12 @@ int main()
         
         for (int row = 0; row < nrRows; ++row)
         {
-//            shaderPBR.SetFloat("metallic", (float)row / (float)nrRows);
+            shaderPBR.SetFloat("metallic", (float)row / (float)nrRows);
             for (int col = 0; col < nrColumns; ++col)
             {
                 // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
                 // on direct lighting.
-//                shaderPBR.SetFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
+                shaderPBR.SetFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
 
                 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(
@@ -351,6 +432,11 @@ int main()
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
         renderCube();
         
+//        displayShader.Use();
+//        displayShader.SetMatrix4("view", view);
+//        glActiveTexture(GL_TEXTURE0);
+//        glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+//        renderQuad();
         
         
       

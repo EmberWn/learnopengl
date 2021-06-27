@@ -7,6 +7,8 @@ uniform sampler2D depthMap;
 uniform float near_plane;
 uniform float far_plane;
 
+uniform sampler2D displayMap;
+
 float LinearizeDepth(float depth)
 {
     float z = depth * 2.0 - 1.0;
@@ -17,9 +19,10 @@ void main()
 {
 
     float depthValue = texture(depthMap, TexCoords).r;
+    FragColor = texture(displayMap, TexCoords); 
 
     // origin
-    FragColor = vec4(vec3(depthValue), 1.0);
+    // FragColor = vec4(vec3(depthValue), 1.0);
 
     // FragColor = vec4(vec3(LinearizeDepth(depthValue) / far_plane), 1.0);
 
